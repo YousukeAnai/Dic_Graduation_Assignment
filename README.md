@@ -19,7 +19,9 @@
 5.  学習を実行。(約8h)  
       !python train_BiGAN.py
 
-6.  判定したいアンパンマン画像ファイルをディレクトリTest_Data/に置く。
+6.  判定したいアンパンマン画像ファイルを下記ディレクトリに入れる。  
+      ./ANPANMAN_Anomaly_Detection/Test_Data/191205/  
+      (既に上記ディレクトリ内に入っている画像は参考画像なので削除)
 
 7.  推定を実行  
       !python predict_BiGAN.py
