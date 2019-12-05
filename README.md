@@ -1,9 +1,8 @@
 # アンパンマン画伯判別機
 
-\![anpanman_GAHAKU](https://user-images.githubusercontent.com/46349770/66885475-5ef80900-f00f-11e9-9927-28f27503b60c.png)    
 ![anpanman_anomally_detection_gaiyou](https://user-images.githubusercontent.com/46349770/70225769-01707500-1793-11ea-824f-4bf270d010b4.png)
 
-##実行手順
+## 実行手順
 
 1.  GoogleDriveにて任意の実行ノートブックを立ち上げる。
 
@@ -21,7 +20,7 @@
 6.  推定を実行  
       !python predict_BiGAN.py
 
-##判定結果  
+## 判定結果  
 
     下記ファイルに表示される。  
     ./ANPANMAN_Anomaly_Detection/EfficientGAN/out_images_BiGAN/resultImage_anpanman_test.png
