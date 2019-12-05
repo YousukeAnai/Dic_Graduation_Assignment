@@ -4,26 +4,24 @@
 
 ## 実行手順
 
-1.  GoogleDriveにて任意の実行ノートブックを立ち上げる。
-
-2.  下記を実行し、本リポジトリをクローン  
+1.  下記を実行し、本リポジトリをクローン  
       !git clone git@github.com:YousukeAnai/Dic_Graduation_Assignment.git
 
-3.  Trainデータを解凍。  
+2.  Trainデータを解凍。  
       !unzip -d "./ANPANMAN_Anomaly_Detection/Train_Data/191103/" "./ANPANMAN_Anomaly_Detection/Train_Data/191103/anpanman_train.zip"  
       !rm "./ANPANMAN_Anomaly_Detection/Train_Data/191103/anpanman_train.zip"
 
-4.  実行ディレクトリに移動。  
+3.  実行ディレクトリに移動。  
       !cd "./ANPANMAN_Anomaly_Detection/EfficientGAN"
 
-5.  学習を実行。(約8h)  
+4.  学習を実行。(GoogleColabにて約8h)  
       !python train_BiGAN.py
 
-6.  判定したいアンパンマン画像ファイルを下記ディレクトリに入れる。  
+5.  判定したいアンパンマン画像ファイルを下記ディレクトリに入れる。  
       ./ANPANMAN_Anomaly_Detection/Test_Data/191205/  
       (既に上記ディレクトリ内に入っている画像は参考画像なので削除)
 
-7.  推定を実行  
+6.  推定を実行  
       !python predict_BiGAN.py
 
 ## 判定結果  
