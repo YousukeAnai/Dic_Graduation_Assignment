@@ -87,19 +87,19 @@ class BiGAN():
             with tf.variable_scope("layer1"):  # layer1 fc nx200 -> nx1024
                 fc1 = self.fully_connect(z, self.NOISE_UNIT_NUM, 1024, self.SEED)
                 bn1 = self.batch_norm(fc1)
-                rl1 = tf.nn.relu(bn1)
+                rl1 = tf.nn.leaky_relu(bn1, alpha=0.1)
 
             with tf.variable_scope("layer2"):  # layer2 fc nx1024 -> nx6272
                 fc2 = self.fully_connect(rl1, 1024, 25*25*self.BASE_CHANNEL*4, self.SEED)
                 bn2 = self.batch_norm(fc2)
-                rl2 = tf.nn.relu(bn2)
+                rl2 = tf.nn.leaky_relu(bn2, alpha=0.1)
 
             with tf.variable_scope("layer3"):  # layer3 deconv nx6272 -> nx7x7x128 -> nx14x14x64
                 shape = tf.shape(rl2)
                 reshape3 = tf.reshape(rl2, [shape[0], 25, 25, 128])
                 deconv3 = self.conv2d_transpose(reshape3, self.BASE_CHANNEL*4, self.BASE_CHANNEL*2, 4, 2, self.SEED)
                 bn3 = self.batch_norm(deconv3)
-                rl3 = tf.nn.relu(bn3)
+                rl3 = tf.nn.leaky_relu(bn3, alpha=0.1)
 
             with tf.variable_scope("layer4"):  # layer3 deconv nx14x14x64 -> nx28x28x1
                 deconv4 = self.conv2d_transpose(rl3, self.BASE_CHANNEL*2, self.IMG_CHANNEL, 4, 2, self.SEED)
@@ -135,11 +135,8 @@ class BiGAN():
                 self.drop3 = tf.layers.dropout(lr3, rate=1.0 - self.KEEP_PROB, name='dropout', training=is_training)
 
             with tf.variable_scope("y_fc_logits"):
-                #self.logits = self.fully_connect(self.drop3, 1024, 1, self.SEED)
-                #gap = tf.nn.avg_pool(self.drop3, ksize=[1,1024], strides=[1,1], padding="VALID")
-                #shapegap = tf.shape(gap)
-                #self.logits = tf.reshape(shapegap, [x[0], 1])
-                self.logits = tf.reduce_mean(self.drop3, axis=1)
+                self.logits = self.fully_connect(self.drop3, 1024, 1, self.SEED)
+
         return self.drop3, self.logits
 
 
