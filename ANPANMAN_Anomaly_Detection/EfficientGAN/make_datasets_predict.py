@@ -3,7 +3,7 @@ import os
 import glob 
 import re
 import random
-import cv2
+#import cv2
 from PIL import Image
 from keras.preprocessing import image
 
@@ -11,37 +11,27 @@ class Make_datasets_predict():
 
     def __init__(self, test_data, img_width, img_height, seed):
         self.filename = test_data
-        #self.true_data = true_data
-        #self.false_data = false_data
         self.img_width = img_width
         self.img_height = img_height
         self.seed = seed
         x_test = self.read_DATASET(self.filename)
-        #self.train_np = x_train #np.concatenate((y_train.reshape(-1,1), x_train), axis=1).astype(np.float32)
-        #self.valid_true_np = np.concatenate((y_valid_true.reshape(-1,1), x_valid_true), axis=1).astype(np.float32)
-        #self.valid_false_np = np.concatenate((y_valid_false.reshape(-1,1), x_valid_false), axis=1).astype(np.float32)
-        #print("self.train_np.shape, ", self.train_np.shape)
-        #print("self.valid_true_np.shape, ", self.valid_true_np.shape)
-        #print("self.valid_false_np.shape, ", self.valid_false_np.shape)
-        #print("np.max(x_train), ", np.max(x_train))
-        #print("np.min(x_train), ", np.min(x_train))
-        self.valid_data = x_test #np.concatenate((self.valid_true_np, self.valid_false_np))
 
+        self.valid_data = x_test
+        
         random.seed(self.seed)
         np.random.seed(self.seed)
 
     def read_DATASET(self, test_path):
         test_list = os.listdir(test_path)
-        #y_train = np.ones(len(train_list))
         
         x_test = np.empty((0, self.img_width*self.img_height))
         for img in test_list:    
             path_name = test_path+img
-            x_img = cv2.imread(path_name)
+            x_img = Image.open(path_name)
             # サイズを揃える
-            x_img = cv2.resize(x_img, (self.img_width, self.img_height))
+            x_img = x_img.resize((self.img_width, self.img_height))
             # 3chを1chに変換
-            x_img= cv2.cvtColor(x_img, cv2.COLOR_BGR2GRAY)
+            x_img= x_img.convert('L')
             # PIL.Image.Imageからnumpy配列へ
             x_img = np.array(x_img)
             # 正規化
@@ -53,7 +43,6 @@ class Make_datasets_predict():
             x_test = np.concatenate([x_test, x_img], axis = 0)
            
         print("x_test.shape, ", x_test.shape)
-        #print("y_train.shape, ", y_train.shape)
 
         return x_test
 

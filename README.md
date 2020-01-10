@@ -8,9 +8,9 @@
       !git clone git@github.com:YousukeAnai/Dic_Graduation_Assignment.git
 
 2.  Trainデータを解凍。  
-      !unzip -d "./Dic_Graduation_Assignment/ANPANMAN_Anomaly_Detection/Train_Data/191103/" "./Dic_Graduation_Assignment/ANPANMAN_Anomaly_Detection/Train_Data/191103/anpanman_train.zip"  
+      !unzip -d "./Dic_Graduation_Assignment/ANPANMAN_Anomaly_Detection/Train_Data/191207/" "./Dic_Graduation_Assignment/ANPANMAN_Anomaly_Detection/Train_Data/191207/anpanman_train_191207.zip"  
 
-      !rm "./Dic_Graduation_Assignment/ANPANMAN_Anomaly_Detection/Train_Data/191103/anpanman_train.zip"
+      !rm "./Dic_Graduation_Assignment/ANPANMAN_Anomaly_Detection/Train_Data/191207/anpanman_train_191207.zip"
 
 3.  実行ディレクトリに移動。  
       import os  

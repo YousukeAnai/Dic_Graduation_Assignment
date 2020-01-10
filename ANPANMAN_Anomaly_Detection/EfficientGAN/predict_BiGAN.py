@@ -5,7 +5,7 @@ import utility as Utility
 import argparse
 import matplotlib.pyplot as plt
 from model_BiGAN import BiGAN as Model
-#from make_datasets_MNIST import Make_datasets_MNIST as Make_datasets
+
 from make_datasets_predict import Make_datasets_predict as Make_datasets
 
 def parser():
@@ -135,33 +135,17 @@ log_list.append(['epoch', 'AUC'])
 #training loop
 for epoch in range(1):
     if epoch % VALID_SPAN == 0:
-        # score_A_list = []
         score_A_np = np.zeros((0, 2), dtype=np.float32)
         val_data_num = len(make_datasets.valid_data)
-        #for i in range(0, val_data_num, BATCH_SIZE):
+
         img_batch_test = make_datasets.get_valid_data_for_1_batch(0, val_data_num)
         score_A_ = sess.run(score_A, feed_dict={x_:img_batch_test, is_training_:False})
         score_A_re = np.reshape(score_A_, (-1, 1))
         tars_batch_re = np.where(score_A_re < SCORE_TH, 1, 0) #np.reshape(tars_batch, (-1, 1))
 
         score_A_np_tmp = np.concatenate((score_A_re, tars_batch_re), axis=1)
-        #score_A_np = np.concatenate((score_A_np, score_A_np_tmp), axis=0)
 
-        #tp, fp, tn, fn, precision, recall, array_1_np, array_0_np = Utility.compute_precision_recall(score_A_np)
-        #auc = Utility.make_ROC_graph(score_A_np, 'out_graph/' + LOGFILE_NAME, epoch)
-        #print("tp:{}, fp:{}, tn:{}, fn:{}, precision:{:.4f}, recall:{:.4f}, AUC:{:.4f}".format(tp, fp, tn, fn, precision, recall, auc))
-        #log_list.append([epoch, auc])
-
-        #img_batch_1, _ = make_datasets.get_valid_data_for_1_batch(0, 12)
-        #img_batch_0, _ = make_datasets.get_valid_data_for_1_batch(val_data_num - 12, 12)
-        #img_batch_test, _ = make_datasets.get_valid_data_for_1_batch(0, val_data_num)
-        
-        #x_z_x_0 = sess.run(x_z_x, feed_dict={x_:img_batch_0, is_training_:False})
-        #x_z_x_1 = sess.run(x_z_x, feed_dict={x_:img_batch_1, is_training_:False})
         x_z_x_test = sess.run(x_z_x, feed_dict={x_:img_batch_test, is_training_:False})
-        
-        #score_A_0 = sess.run(score_A, feed_dict={x_:img_batch_0, is_training_:False})
-        #score_A_1 = sess.run(score_A, feed_dict={x_:img_batch_1, is_training_:False})
         
         array_1_np, array_0_np = Utility.score_divide(score_A_np_tmp)
         
