@@ -12,7 +12,7 @@ def parser():
     parser.add_argument('--batch_size', '-b', type=int, default=300, help='Number of images in each mini-batch')
     parser.add_argument('--log_file_name', '-lf', type=str, default='anpanman', help='log file name')
     parser.add_argument('--epoch', '-e', type=int, default=1001, help='epoch')
-    parser.add_argument('--file_train_data', '-ftd', type=str, default='../Train_Data/191207/', help='train data')
+    parser.add_argument('--file_train_data', '-ftd', type=str, default='../Train_Data/191103/', help='train data')
     parser.add_argument('--test_true_data', '-ttd', type=str, default='../Valid_True_Data/191103/', help='test of true_data')
     parser.add_argument('--test_false_data', '-tfd', type=str, default='../Valid_False_Data/191103/', help='test of false_data')
     parser.add_argument('--valid_span', '-vs', type=int, default=100, help='validation span')
@@ -198,30 +198,36 @@ for epoch in range(0, EPOCH):
         # score_A_list = []
         score_A_np = np.zeros((0, 2), dtype=np.float32)
         val_data_num = len(make_datasets.valid_data)
-        for i in range(0, val_data_num, BATCH_SIZE):
-            img_batch, tars_batch = make_datasets.get_valid_data_for_1_batch(i, BATCH_SIZE)
-            score_A_ = sess.run(score_A, feed_dict={x_:img_batch, is_training_:False})
-            score_A_re = np.reshape(score_A_, (-1, 1))
-            tars_batch_re = np.reshape(tars_batch, (-1, 1))
+        val_true_data_num = len(make_datasets.valid_true_np)
+        val_false_data_num = len(make_datasets.valid_false_np)
 
-            score_A_np_tmp = np.concatenate((score_A_re, tars_batch_re), axis=1)
-            score_A_np = np.concatenate((score_A_np, score_A_np_tmp), axis=0)
+        img_batch_1, _ = make_datasets.get_valid_data_for_1_batch(0, val_true_data_num)
+        img_batch_0, _ = make_datasets.get_valid_data_for_1_batch(val_data_num - val_false_data_num, val_true_data_num)        
 
-        tp, fp, tn, fn, precision, recall, array_1_np, array_0_np = Utility.compute_precision_recall(score_A_np)
+        x_z_x_1 = sess.run(x_z_x, feed_dict={x_:img_batch_1, is_training_:False})
+        x_z_x_0 = sess.run(x_z_x, feed_dict={x_:img_batch_0, is_training_:False})
+        
+        score_A_1 = sess.run(score_A, feed_dict={x_:img_batch_1, is_training_:False})  
+        score_A_0 = sess.run(score_A, feed_dict={x_:img_batch_0, is_training_:False})
+        
+        score_A_re_1 = np.reshape(score_A_1, (-1, 1))
+        score_A_re_0 = np.reshape(score_A_0, (-1, 1))
+        
+        tars_batch_1 = np.ones(val_true_data_num)
+        tars_batch_0 = np.zeros(val_false_data_num)
+        tars_batch_re_1 = np.reshape(tars_batch_1, (-1, 1))
+        tars_batch_re_0 = np.reshape(tars_batch_0, (-1, 1))
+
+        score_A_np_1_tmp = np.concatenate((score_A_re_1, tars_batch_re_1), axis=1)
+        score_A_np_0_tmp = np.concatenate((score_A_re_0, tars_batch_re_0), axis=1)
+        score_A_np = np.concatenate((score_A_np_1_tmp, score_A_np_0_tmp), axis=0)
+        #print(score_A_np)
+        tp, fp, tn, fn, precision, recall = Utility.compute_precision_recall(score_A_np)
         auc = Utility.make_ROC_graph(score_A_np, 'out_graph/' + LOGFILE_NAME, epoch)
         print("tp:{}, fp:{}, tn:{}, fn:{}, precision:{:.4f}, recall:{:.4f}, AUC:{:.4f}".format(tp, fp, tn, fn, precision, recall, auc))
         log_list.append([epoch, auc])
-
-        img_batch_1, _ = make_datasets.get_valid_data_for_1_batch(0, 12)
-        img_batch_0, _ = make_datasets.get_valid_data_for_1_batch(val_data_num - 12, 12)
-
-        x_z_x_0 = sess.run(x_z_x, feed_dict={x_:img_batch_0, is_training_:False})
-        x_z_x_1 = sess.run(x_z_x, feed_dict={x_:img_batch_1, is_training_:False})
-
-        score_A_0 = sess.run(score_A, feed_dict={x_:img_batch_0, is_training_:False})
-        score_A_1 = sess.run(score_A, feed_dict={x_:img_batch_1, is_training_:False})
         
-        Utility.make_score_hist(array_1_np, array_0_np, epoch, LOGFILE_NAME, OUT_HIST_DIR)
+        Utility.make_score_hist(score_A_1, score_A_0, epoch, LOGFILE_NAME, OUT_HIST_DIR)
         Utility.make_output_img(img_batch_1, img_batch_0, x_z_x_1, x_z_x_0, score_A_0, score_A_1, epoch, LOGFILE_NAME, OUT_IMG_DIR)
                 
     #after learning

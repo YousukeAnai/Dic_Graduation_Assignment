@@ -9,46 +9,45 @@ import seaborn as sns
 def compute_precision_recall(score_A_np, ):
     array_1 = np.where(score_A_np[:, 1] == 1.0)
     array_0 = np.where(score_A_np[:, 1] == 0.0)
-    print("len(array_1), ", len(array_1))
-    print("len(array_0), ", len(array_0))
-    array_1_np = score_A_np[array_1]
-    array_0_np = score_A_np[array_0]
+
     mean_1 = np.mean((score_A_np[array_1])[:, 0])
     mean_0 = np.mean((score_A_np[array_0])[:, 0])
     medium = (mean_1 + mean_0) / 2.0
-    print("mean_1, ", mean_1)
-    print("mean_0, ", mean_0)
-    print("medium, ", medium)
-    #threshold_name = './score_threshold.npy'
+    print("mean_positive_score, ", mean_1)
+    print("mean_negative_score, ", mean_0)
+    print("score_threshold(pos_neg middle), ", medium)
     np.save('./score_threshold.npy', medium)
         
-    array_upper = score_A_np[:, 0] >= medium
-    array_lower = score_A_np[:, 0] < medium
-    print("np.sum(array_upper.astype(np.float32)), ", np.sum(array_upper.astype(np.float32)))
-    print("np.sum(array_lower.astype(np.float32)), ", np.sum(array_lower.astype(np.float32)))
-    array_1_tf = score_A_np[:, 1] == 1.0
-    array_0_tf = score_A_np[:, 1] == 0.0
-    print("np.sum(array_1_tf.astype(np.float32)), ", np.sum(array_1_tf.astype(np.float32)))
-    print("np.sum(array_0_tf.astype(np.float32)), ", np.sum(array_0_tf.astype(np.float32)))
+    array_upper = np.where(score_A_np[:, 0] >= medium)[0]
+    array_lower = np.where(score_A_np[:, 0] < medium)[0]
+    #print(array_upper)
+    print("negative_predict_num, ", array_upper.shape)
+    print("positive_predict_num, ", array_lower.shape)
+    array_1_tf = np.where(score_A_np[:, 1] == 1.0)[0]
+    array_0_tf = np.where(score_A_np[:, 1] == 0.0)[0]
+    #print(array_1_tf)
+    print("negative_fact_num, ", array_0_tf.shape)
+    print("positive_fact_num, ", array_1_tf.shape)
 
-    tn = np.sum(np.equal(array_lower, array_1_tf).astype(np.int32))
-    tp = np.sum(np.equal(array_upper, array_0_tf).astype(np.int32))
-    fp = np.sum(np.equal(array_upper, array_1_tf).astype(np.int32))
-    fn = np.sum(np.equal(array_lower, array_0_tf).astype(np.int32))
+    tn = len(set(array_lower)&set(array_1_tf))
+    tp = len(set(array_upper)&set(array_0_tf))
+    fp = len(set(array_lower)&set(array_0_tf))
+    fn = len(set(array_upper)&set(array_1_tf))
 
     precision = tp / (tp + fp + 0.00001)
     recall = tp / (tp + fn + 0.00001)
 
-    return tp, fp, tn, fn, precision, recall, array_1_np, array_0_np
+    return tp, fp, tn, fn, precision, recall
 
 def score_divide(score_A_np):
-    array_1 = np.where(score_A_np[:, 1] == 1.0)
-    array_0 = np.where(score_A_np[:, 1] == 0.0)
-    print("len(array_1), ", len(array_1))
-    print("len(array_0), ", len(array_0))
-    array_1_np = score_A_np[array_1]
-    array_0_np = score_A_np[array_0]
-
+    array_1 = np.where(score_A_np[:, 1] == 1.0)[0]
+    array_0 = np.where(score_A_np[:, 1] == 0.0)[0]
+    print("positive_predict_num, ", array_1.shape)
+    print("negative_predict_num, ", array_0.shape)
+    array_1_np = score_A_np[array_1][:, 0]
+    array_0_np = score_A_np[array_0][:, 0]
+    #print(array_1_np)
+    #print(array_0_np)
     return array_1_np, array_0_np
 
 def save_graph(x, y, filename, epoch):
@@ -101,13 +100,11 @@ def convert_np2pil(images_255):
         list_images_PIL.append(image_1_PIL)
     return list_images_PIL
 
-def make_score_hist(array_1_np, array_0_np, epoch, LOGFILE_NAME, OUT_HIST_DIR):
-    array_1_np = np.delete(array_1_np, 1, 1)
-    array_1_np = array_1_np.flatten()
-    array_0_np = np.delete(array_0_np, 1, 1)
-    array_0_np = array_0_np.flatten()
-    list_1 = array_1_np.tolist()
-    list_0 = array_0_np.tolist()
+def make_score_hist(score_a_1, score_a_0, epoch, LOGFILE_NAME, OUT_HIST_DIR):
+    list_1 = score_a_1.tolist()
+    list_0 = score_a_0.tolist()
+    #print(list_1)
+    #print(list_0)
     plt.figure(figsize=(7, 5))
     plt.title("Histgram of Score")
     plt.xlabel("Score")
@@ -118,24 +115,11 @@ def make_score_hist(array_1_np, array_0_np, epoch, LOGFILE_NAME, OUT_HIST_DIR):
     plt.savefig(OUT_HIST_DIR + "/resultScoreHist_"+ LOGFILE_NAME + '_' + str(epoch) + ".png")
     plt.show()    
     
-def make_score_hist_test(array_1_np, array_0_np, score_th, LOGFILE_NAME, OUT_HIST_DIR):
-    array_1_np = np.delete(array_1_np, 1, 1)
-    array_1_np = array_1_np.flatten()
-    array_0_np = np.delete(array_0_np, 1, 1)
-    array_0_np = array_0_np.flatten()
-    list_1 = array_1_np.tolist()
-    list_0 = array_0_np.tolist()
-    #fig, ax = plt.subplots()
-    #fig = plt.figure(figsize=(7, 5))
-    #ax = fig.add_subplot()
-    #ax.set_title("Histgram of Score")
-    #ax.set_xlabel("Score")
-    #ax.set_ylabel("freq")
-    #ax.hist(list_1, bins=40, alpha=0.3, histtype='stepfilled', color='r', label="1")
-    #ax.hist(list_0, bins=40, alpha=0.3, histtype='stepfilled', color='b', label='0')
-    #score_th_ylim = ax.get_ylim()
-    #ax.vlines(score_th, 0, score_th_ylim, colors = "red", linestyles='dotted')
-    #ax.legend(loc=1)
+def make_score_hist_test(score_a_1, score_a_0, score_th, LOGFILE_NAME, OUT_HIST_DIR):    
+    list_1 = score_a_1.tolist()
+    list_0 = score_a_0.tolist()
+    #print(list_1)
+    #print(list_0)
     plt.figure(figsize=(7, 5))
     plt.title("Histgram of Score")
     plt.xlabel("Score")
@@ -145,6 +129,7 @@ def make_score_hist_test(array_1_np, array_0_np, score_th, LOGFILE_NAME, OUT_HIS
     plt.legend(loc=1)    
     plt.savefig(OUT_HIST_DIR + "/resultScoreHist_"+ LOGFILE_NAME + "_test.png")
     plt.show()   
+    
 def make_score_bar(score_a):
     
     score_a = score_a.tolist()

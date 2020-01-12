@@ -16,7 +16,7 @@ def parser():
     #parser.add_argument('--file_train_data', '-ftd', type=str, default='./mnist.npz', help='train data')
     #parser.add_argument('--test_true_data', '-ttd', type=str, default='./mnist.npz', help='test of true_data')
     #parser.add_argument('--test_false_data', '-tfd', type=str, default='./mnist.npz', help='test of false_data')
-    parser.add_argument('--test_data', '-td', type=str, default='../Test_Data/191205/', help='test of false_data')
+    parser.add_argument('--test_data', '-td', type=str, default='../Test_Data/200112/', help='test of false_data')
     parser.add_argument('--valid_span', '-vs', type=int, default=1, help='validation span')
     parser.add_argument('--score_th', '-st', type=float, default=np.load('./score_threshold.npy'), help='validation span')
 
@@ -146,7 +146,7 @@ for epoch in range(1):
         score_A_np_tmp = np.concatenate((score_A_re, tars_batch_re), axis=1)
 
         x_z_x_test = sess.run(x_z_x, feed_dict={x_:img_batch_test, is_training_:False})
-        
+        #print(score_A_np_tmp)
         array_1_np, array_0_np = Utility.score_divide(score_A_np_tmp)
         
         Utility.make_score_hist_test(array_1_np, array_0_np, SCORE_TH, LOGFILE_NAME, OUT_HIST_DIR)
