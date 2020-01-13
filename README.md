@@ -1,6 +1,6 @@
 # アンパンマン画伯判別機
 
-![anpanman_anomally_detection_gaiyou](https://user-images.githubusercontent.com/46349770/70225769-01707500-1793-11ea-824f-4bf270d010b4.png)
+![anpanman_anomally_detection_gaiyou](https://user-images.githubusercontent.com/46349770/72229584-1f7f8f80-35f3-11ea-8bc7-650e2281f8c1.png)
 
 ## 実行手順
 
@@ -32,3 +32,5 @@
     正常な絵はスコア部の背景が青になり、異常な絵は赤になる。  
     ./Dic_Graduation_Assignment/ANPANMAN_Anomaly_Detection/EfficientGAN/out_images_BiGAN/resultImage_anpanman_test.png
 ![result_image](https://user-images.githubusercontent.com/46349770/70229068-d7ba4c80-1798-11ea-85be-ad4a95a23a5b.png)
+## 関連記事  
+https://qiita.com/yanachanpe2016/items/30a44256f422d6542c58
