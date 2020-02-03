@@ -59,22 +59,22 @@ class BiGAN():
         fc = tf.matmul(input, w, name='fc') + b
         return fc
 
-    def encoder(self, x, reuse=False, is_training=False): #x is expected [n, 28, 28, 1]
+    def encoder(self, x, reuse=False, is_training=False): #x is expected [n, 100, 100, 1]
         with tf.variable_scope('encoder', reuse=reuse):
-            with tf.variable_scope("layer1"):  # layer1 conv nx28x28x1 -> nx14x14x32
+            with tf.variable_scope("layer1"):  # layer1 conv nx100x100x1 -> nx50x50x32
                 conv1 = self.conv2d(x, self.IMG_CHANNEL, self.BASE_CHANNEL, 3, 2, self.SEED)
 
-            with tf.variable_scope("layer2"):  # layer2 conv nx14x14x32 -> nx7x7x64
+            with tf.variable_scope("layer2"):  # layer2 conv nx50x50x32 -> nx25x25x64
                 conv2 = self.conv2d(conv1, self.BASE_CHANNEL, self.BASE_CHANNEL*2, 3, 2, self.SEED)
                 bn2 = self.batch_norm(conv2)
                 lr2 = self.leaky_relu(bn2, alpha=0.1)
 
-            with tf.variable_scope("layer3"):  # layer3 conv nx7x7x64 -> nx4x4x128
+            with tf.variable_scope("layer3"):  # layer3 conv nx25x25x64 -> nx13x13x128
                 conv3 = self.conv2d(lr2, self.BASE_CHANNEL*2, self.BASE_CHANNEL*4, 3, 2, self.SEED)
                 bn3 = self.batch_norm(conv3)
                 lr3 = self.leaky_relu(bn3, alpha=0.1)
 
-            with tf.variable_scope("layer4"):  # layer4 fc nx4x4x128 -> nx200
+            with tf.variable_scope("layer4"):  # layer4 fc nx13x13x128 -> nx200
                 shape = tf.shape(lr3)
                 print(shape[1])
                 reshape4 = tf.reshape(lr3, [shape[0], shape[1]*shape[2]*shape[3]])
@@ -89,33 +89,33 @@ class BiGAN():
                 bn1 = self.batch_norm(fc1)
                 rl1 = tf.nn.relu(bn1)
 
-            with tf.variable_scope("layer2"):  # layer2 fc nx1024 -> nx6272
+            with tf.variable_scope("layer2"):  # layer2 fc nx1024 -> nx80000
                 fc2 = self.fully_connect(rl1, 1024, 25*25*self.BASE_CHANNEL*4, self.SEED)
                 bn2 = self.batch_norm(fc2)
                 rl2 = tf.nn.relu(bn2)
 
-            with tf.variable_scope("layer3"):  # layer3 deconv nx6272 -> nx7x7x128 -> nx14x14x64
+            with tf.variable_scope("layer3"):  # layer3 deconv nx80000 -> nx25x25x128 -> nx50x50x64
                 shape = tf.shape(rl2)
                 reshape3 = tf.reshape(rl2, [shape[0], 25, 25, 128])
                 deconv3 = self.conv2d_transpose(reshape3, self.BASE_CHANNEL*4, self.BASE_CHANNEL*2, 4, 2, self.SEED)
                 bn3 = self.batch_norm(deconv3)
                 rl3 = tf.nn.relu(bn3)
 
-            with tf.variable_scope("layer4"):  # layer3 deconv nx14x14x64 -> nx28x28x1
+            with tf.variable_scope("layer4"):  # layer3 deconv nx50x50x64 -> nx100x100x1
                 deconv4 = self.conv2d_transpose(rl3, self.BASE_CHANNEL*2, self.IMG_CHANNEL, 4, 2, self.SEED)
                 tanh4 = tf.tanh(deconv4)
 
         return tanh4
 
 
-    def discriminator(self, x, z, reuse=False, is_training=True): #z[n, 200], x[n, 28, 28, 1]
+    def discriminator(self, x, z, reuse=False, is_training=True): #z[n, 200], x[n, 100, 100, 1]
         with tf.variable_scope('discriminator', reuse=reuse):
-            with tf.variable_scope("x_layer1"):  # layer x1 conv [n, 28, 28, 1] -> [n, 14, 14, 64]
+            with tf.variable_scope("x_layer1"):  # layer x1 conv [n, 100, 100, 1] -> [n, 50, 50, 64]
                 convx1 = self.conv2d(x, self.IMG_CHANNEL, self.BASE_CHANNEL*2, 4, 2, self.SEED)
                 lrx1 = self.leaky_relu(convx1, alpha=0.1)
                 dropx1 = tf.layers.dropout(lrx1, rate=1.0 - self.KEEP_PROB, name='dropout', training=is_training)
 
-            with tf.variable_scope("x_layer2"):  # layer x2 conv [n, 14, 14, 64] -> [n, 7, 7, 64] -> [n, 3136]
+            with tf.variable_scope("x_layer2"):  # layer x2 conv [n, 50, 50, 64] -> [n, 25, 25, 64] -> [n, 40000]
                 convx2 = self.conv2d(dropx1, self.BASE_CHANNEL*2, self.BASE_CHANNEL*2, 4, 2, self.SEED)
                 bnx2 = self.batch_norm(convx2)
                 lrx2 = self.leaky_relu(bnx2, alpha=0.1)
@@ -128,7 +128,7 @@ class BiGAN():
                 lrz1 = self.leaky_relu(fcz1, alpha=0.1)
                 dropz1 = tf.layers.dropout(lrz1, rate=1.0 - self.KEEP_PROB, name='dropout', training=is_training)
 
-            with tf.variable_scope("y_layer3"):  # layer1 fc [n, 6272], [n, 1024]
+            with tf.variable_scope("y_layer3"):  # layer1 fc [n, 40512], [n, 1024]
                 con3 = tf.concat([reshape3, dropz1], axis=1)
                 fc3 = self.fully_connect(con3, 40000+512, 1024, self.SEED)
                 lr3 = self.leaky_relu(fc3, alpha=0.1)
