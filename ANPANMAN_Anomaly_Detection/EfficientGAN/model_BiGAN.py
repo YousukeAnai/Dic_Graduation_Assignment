@@ -58,6 +58,11 @@ class BiGAN():
         b = tf.get_variable('b', [out_num], initializer=tf.constant_initializer(0.0))
         fc = tf.matmul(input, w, name='fc') + b
         return fc
+    
+    def global_average_pooling(x):
+        for _ in range(2):
+            x = tf.reduce_mean(x, axis=1)
+        return x
 
     def encoder(self, x, reuse=False, is_training=False): #x is expected [n, 100, 100, 1]
         with tf.variable_scope('encoder', reuse=reuse):
@@ -115,22 +120,24 @@ class BiGAN():
                 lrx1 = self.leaky_relu(convx1, alpha=0.1)
                 dropx1 = tf.layers.dropout(lrx1, rate=1.0 - self.KEEP_PROB, name='dropout', training=is_training)
 
-            with tf.variable_scope("x_layer2"):  # layer x2 conv [n, 50, 50, 64] -> [n, 25, 25, 64] -> [n, 40000]
+            with tf.variable_scope("x_layer2"):  # layer x2 conv [n, 50, 50, 64] -> [n, 25, 25, 64] -> [n, 64]
                 convx2 = self.conv2d(dropx1, self.BASE_CHANNEL*2, self.BASE_CHANNEL*2, 4, 2, self.SEED)
                 bnx2 = self.batch_norm(convx2)
                 lrx2 = self.leaky_relu(bnx2, alpha=0.1)
                 dropx2 = tf.layers.dropout(lrx2, rate=1.0 - self.KEEP_PROB, name='dropout', training=is_training)
-                shapex2 = tf.shape(dropx2)
-                reshape3 = tf.reshape(dropx2, [shapex2[0], shapex2[1]*shapex2[2]*shapex2[3]])
+                gap = self.global_average_pooling(dropx2)
+                shapex2 = tf.shape(gap)
+                reshape3 = tf.reshape(gap, [shapex2[0], shapex2[1]*shapex2[2]])
+                #reshape3 = tf.reshape(dropx2, [shapex2[0], shapex2[1]*shapex2[2]*shapex2[3]])
 
             with tf.variable_scope("z_layer1"):  # layer1 fc [n, 200] -> [n, 512]
                 fcz1 = self.fully_connect(z, self.NOISE_UNIT_NUM, 512, self.SEED)
                 lrz1 = self.leaky_relu(fcz1, alpha=0.1)
                 dropz1 = tf.layers.dropout(lrz1, rate=1.0 - self.KEEP_PROB, name='dropout', training=is_training)
 
-            with tf.variable_scope("y_layer3"):  # layer1 fc [n, 40512], [n, 1024]
+            with tf.variable_scope("y_layer3"):  # layer1 fc [n, 64+512], [n, 1024]
                 con3 = tf.concat([reshape3, dropz1], axis=1)
-                fc3 = self.fully_connect(con3, 40000+512, 1024, self.SEED)
+                fc3 = self.fully_connect(con3, 64+512, 1024, self.SEED)
                 lr3 = self.leaky_relu(fc3, alpha=0.1)
                 self.drop3 = tf.layers.dropout(lr3, rate=1.0 - self.KEEP_PROB, name='dropout', training=is_training)
 
